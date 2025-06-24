@@ -1,0 +1,96 @@
+name: Ubuntu DNS Fix Script Test
+
+on:
+  push:
+    branches-ignore:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch: # Allows manual triggering from the GitHub Actions tab
+    inputs:
+      target_domain:
+        description: 'Domain to use for DNS health checks (e.g., example.com)'
+        required: false
+        default: 'google.com'
+      interface_name:
+        description: 'Network interface to check DNS configuration for (e.g., eth0, eno1)'
+        required: false
+        default: 'eth0' # Common default for GitHub Actions runners
+
+jobs:
+  test-dns-recovery:
+    runs-on: ubuntu-latest # Uses Ubuntu 22.04 by default or newer LTS
+    name: Test DNS Recovery Mechanism
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies (bind9-dnsutils for 'host')
+        run: sudo apt-get update && sudo apt-get install -y bind9-dnsutils
+
+      - name: Set script variables from inputs
+        run: |
+          echo "ACTION_TARGET_DOMAIN=${{ github.event.inputs.target_domain || 'google.com' }}" >> $GITHUB_ENV
+          echo "ACTION_INTERFACE_NAME=${{ github.event.inputs.interface_name || 'eth0' }}" >> $GITHUB_ENV
+      - name: Simulate broken DNS (point systemd-resolved to unreachable server)
+        run: |
+          set -e
+          echo "nameserver 10.0.0.1" | sudo tee /etc/resolv.conf
+          echo -e "[Resolve]\nDNS=10.0.0.1" | sudo tee /etc/systemd/resolved.conf.d/test-bad-dns.conf
+          sudo systemctl restart systemd-resolved
+          sleep 2 # Give it a moment to pick up the bad config
+          # Verify DNS is indeed broken before running the script
+          if host ${{ env.ACTION_TARGET_DOMAIN }} 127.0.0.53; then
+            echo "Error: DNS is still working after simulation. This test is flawed."
+            exit 1
+          else
+            echo "DNS successfully broken for testing."
+          fi
+      - name: Run the DNS Health Checker script
+        working-directory: scripts
+        run: sudo ./ubuntu-dns-fix.sh
+
+      - name: Verify DNS is restored after script execution
+        run: |
+          if ! host ${{ env.ACTION_TARGET_DOMAIN }} 127.0.0.53; then
+            echo "Error: DNS was NOT restored after running the script."
+            cat /var/log/dns_check.log # Output logs for debugging
+            exit 1
+          else
+            echo "DNS successfully restored by the script."
+            grep -q "DNS is now working after restarting systemd-resolved" /var/log/dns_check.log || {
+              echo "Error: Expected log message not found."
+              cat /var/log/dns_check.log
+              exit 1
+            }
+          fi
+  test-dns-healthy:
+    runs-on: ubuntu-latest
+    name: Test Healthy DNS (No Action Taken)
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies (bind9-dnsutils for 'host')
+        run: sudo apt-get update && sudo apt-get install -y bind9-dnsutils
+
+      - name: Set script variables from inputs
+        run: |
+          echo "ACTION_TARGET_DOMAIN=${{ github.event.inputs.target_domain || 'google.com' }}" >> $GITHUB_ENV
+          echo "ACTION_INTERFACE_NAME=${{ github.event.inputs.interface_name || 'eth0' }}" >> $GITHUB_ENV
+      - name: Run the DNS Health Checker script
+        working-directory: scripts
+        run: sudo ./ubuntu-dns-fix.sh
+
+      - name: Verify no action was taken (DNS was already healthy)
+        run: |
+          grep -q "DNS is working correctly. No action needed." /var/log/dns_check.log || {
+            echo "Error: Expected 'DNS is working correctly. No action needed.' message not found."
+            cat /var/log/dns_check.log # Output logs for debugging
+            exit 1
+          }
+          echo "Script correctly identified healthy DNS and took no action."
+        
