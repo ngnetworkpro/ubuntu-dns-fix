@@ -27,7 +27,7 @@ This script detects common DNS failures, attempts to fix them by restarting `sys
 1.  **Clone the Repository (or download the script):**
     ```bash
     git clone [https://github.com/ngnetworkpro/ubuntu-dns-fix.git](https://github.com/ngnetworkpro/ubuntu-dns-fix.git)
-    cd dns-health-checker
+    cd ubuntu-dns-fix
     ```
 
 2.  **Save the Script:**
@@ -93,7 +93,7 @@ Systemd timers are preferred for better integration with systemd and more precis
 
 1.  **Create a systemd Service Unit File:**
 
-    Create `/etc/systemd/system/dns-health-checker.service` with the following content:
+    Create `/etc/systemd/system/ubuntu-dns-fix.service` with the following content:
 
     ```ini, TOML
     [Unit]
@@ -109,7 +109,7 @@ Systemd timers are preferred for better integration with systemd and more precis
     
 2.  **Create a systemd Timer Unit File:**
 
-    Create /etc/systemd/system/dns-health-checker.timer with the following content:
+    Create /etc/systemd/system/ubuntu-dns-fix.timer with the following content:
 
     ```ini, TOML
     [Unit]
@@ -128,20 +128,20 @@ Systemd timers are preferred for better integration with systemd and more precis
 
     ```bash
     sudo systemctl daemon-reload
-    sudo systemctl enable dns-health-checker.timer
-    sudo systemctl start dns-health-checker.timer
+    sudo systemctl enable ubuntu-dns-fix.timer
+    sudo systemctl start ubuntu-dns-fix.timer
     ```
     
 4.  **You can check the timer status with:**
 
     ```bash
-    sudo systemctl list-timers | grep dns-health-checker
+    sudo systemctl list-timers | grep ubuntu-dns-fix
     ```
 
 5. **And service logs with:**
 
     ```bash
-    sudo journalctl -u dns-health-checker.service -f
+    sudo journalctl -u ubuntu-dns-fix.service -f
     ```
     
 ## 📄 Logging
