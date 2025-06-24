@@ -1,4 +1,4 @@
-# 🚀 systemd-resolved DNS Health Checker
+# 🚀 Ubuntu DNS Fix
 
 A robust Bash script designed to monitor and automatically restore DNS resolution on Ubuntu 22.04 LTS systems that use `systemd-resolved` for DNS management and `NetworkManager` for network configuration.
 
@@ -10,7 +10,7 @@ This script detects common DNS failures, attempts to fix them by restarting `sys
 * **Intelligent Failure Detection**: Recognizes specific `nslookup` error patterns like "No answer", "connection timed out", or "NXDOMAIN".
 * **Interface DNS Check**: Checks if the specified network interface (e.g., `eth0`) has DNS servers configured according to `systemd-resolved`.
 * **Automated Recovery**: Automatically restarts the `systemd-resolved` service upon detecting a DNS failure.
-* **Comprehensive Logging**: Records all actions and outcomes to `/var/log/dns_check.log` for easy review.
+* **Comprehensive Logging**: Records all actions and outcomes to `/var/log/ubuntu-dns-fix.log` for easy review.
 * **Contextual Troubleshooting**: Provides highly relevant manual troubleshooting steps in the logs, especially when DNS configuration issues are linked to `NetworkManager` (common with `renderer: NetworkManager` in Netplan).
 
 ## ⚙️ Prerequisites
@@ -27,29 +27,29 @@ This script detects common DNS failures, attempts to fix them by restarting `sys
 1.  **Clone the Repository (or download the script):**
     ```bash
     git clone [https://github.com/ngnetworkpro/ubuntu-dns-fix.git](https://github.com/ngnetworkpro/ubuntu-dns-fix.git)
-    cd dns-health-checker
+    cd ubuntu-dns-fix
     ```
 
 2.  **Save the Script:**
-    Save the script content into a file, for example, `check_dns_health.sh`.
+    Save the script content into a file, for example, `ubuntu-dns-fix.sh`.
     ```bash
-    nano check_dns_health.sh
+    nano ubuntu-dns-fix.sh
     ```
     (Paste the script content from the previous response here)
 
 3.  **Make the Script Executable:**
     ```bash
-    chmod +x check_dns_health.sh
+    chmod +x ubuntu-dns-fix.sh
     ```
 
 4.  **Place the Script:**
     Move the script to a suitable location, e.g., `/usr/local/bin/` or `/opt/scripts/`.
     ```bash
-    sudo mv check_dns_health.sh /usr/local/bin/
+    sudo mv ubuntu-dns-fix.sh /usr/local/bin/
     ```
 
 5.  **Configure Script Variables:**
-    Open the script (`sudo nano /usr/local/bin/check_dns_health.sh`) and adjust the following variables if needed:
+    Open the script (`sudo nano /usr/local/bin/ubuntu-dns-fix.sh`) and adjust the following variables if needed:
     * `TARGET_DOMAIN="google.com"`: The domain used to test DNS resolution. Choose a reliable, always-up domain.
     * `INTERFACE_NAME="eth0"`: Your primary network interface name (e.g., `eth0`, `enp0s3`, `ens33`). You can find this using `ip a`.
 
@@ -62,13 +62,13 @@ You can run the script manually for immediate checks or automate it for continuo
 To run the script once:
 
 ```bash
-sudo /usr/local/bin/check_dns_health.sh
+sudo /usr/local/bin/ubuntu-dns-fix.sh
 ```
 
 Check the output in the log file:
 
 ```bash
-tail -f /var/log/dns_check.log
+tail -f /var/log/ubuntu-dns-fix.log
 ```
 
 ### Automation
@@ -84,36 +84,36 @@ Cron is good for basic periodic tasks.
 
 2.  **Add the following line to run the script every 5 minutes:**
     ```
-    */5 * * * * /usr/local/bin/check_dns_health.sh >> /var/log/dns_check.log 2>&1
+    */5 * * * * /usr/local/bin/ubuntu-dns-fix.sh >> /var/log/ubuntu-dns-fix.log 2>&1
     ```
-    This redirects all output to `/var/log/dns_check.log`.
+    This redirects all output to `/var/log/ubuntu-dns-fix.log`.
 
 #### Option 2: Using systemd Timer (More Robust & Integrated)
 Systemd timers are preferred for better integration with systemd and more precise control over execution.
 
 1.  **Create a systemd Service Unit File:**
 
-    Create `/etc/systemd/system/dns-health-checker.service` with the following content:
+    Create `/etc/systemd/system/ubuntu-dns-fix.service` with the following content:
 
     ```ini, TOML
     [Unit]
-    Description=DNS Health Checker Service
+    Description=Ubuntu DNS Fix Service
     After=network-online.target systemd-resolved.service
 
     [Service]
     Type=oneshot
-    ExecStart=/usr/local/bin/check_dns_health.sh
+    ExecStart=/usr/local/bin/ubuntu-dns-fix.sh
     StandardOutput=journal
     StandardError=journal
     ``` 
     
 2.  **Create a systemd Timer Unit File:**
 
-    Create /etc/systemd/system/dns-health-checker.timer with the following content:
+    Create /etc/systemd/system/ubuntu-dns-fix.timer with the following content:
 
     ```ini, TOML
     [Unit]
-    Description=Run DNS Health Checker every 5 minutes
+    Description=Run Ubuntu DNS Fix every 5 minutes
 
     [Timer]
     OnBootSec=1min   # Run 1 minute after boot
@@ -128,31 +128,31 @@ Systemd timers are preferred for better integration with systemd and more precis
 
     ```bash
     sudo systemctl daemon-reload
-    sudo systemctl enable dns-health-checker.timer
-    sudo systemctl start dns-health-checker.timer
+    sudo systemctl enable ubuntu-dns-fix.timer
+    sudo systemctl start ubuntu-dns-fix.timer
     ```
     
 4.  **You can check the timer status with:**
 
     ```bash
-    sudo systemctl list-timers | grep dns-health-checker
+    sudo systemctl list-timers | grep ubuntu-dns-fix
     ```
 
 5. **And service logs with:**
 
     ```bash
-    sudo journalctl -u dns-health-checker.service -f
+    sudo journalctl -u ubuntu-dns-fix.service -f
     ```
     
 ## 📄 Logging
-All script output is appended to /var/log/dns_check.log. Regularly inspect this file, especially if you experience persistent DNS issues, as it contains detailed messages and troubleshooting guidance.
+All script output is appended to /var/log/ubuntu-dns-fix.log. Regularly inspect this file, especially if you experience persistent DNS issues, as it contains detailed messages and troubleshooting guidance.
 
 ```bash
-tail -f /var/log/dns_check.log
+tail -f /var/log/ubuntu-dns-fix.log
 ```
 
 ## 🔍 Troubleshooting (If the script doesn't resolve it)
-If the script detects a problem and restarts `systemd-resolved` but DNS still fails, the logs in `/var/log/dns_check.log` will contain specific "WARNING" messages with recommended troubleshooting steps. These steps are crucial and often point to configuration issues outside of `systemd-resolved` itself, particularly with `NetworkManager`.
+If the script detects a problem and restarts `systemd-resolved` but DNS still fails, the logs in `/var/log/ubuntu-dns-fix.log` will contain specific "WARNING" messages with recommended troubleshooting steps. These steps are crucial and often point to configuration issues outside of `systemd-resolved` itself, particularly with `NetworkManager`.
 
 ### Common Scenarios & Manual Checks
 #### Scenario 1: `resolvectl dns eth0` shows "No DNS servers reported..."
