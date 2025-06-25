@@ -28,7 +28,7 @@ jobs:
         uses: actions/checkout@v4
         
       - name: Run ShellCheck on all shell scripts
-        uses: ludeeus/action-shellcheck@v2 # Using a specific major version for stability
+        uses: ludeeus/action-shellcheck@master # Using a specific major version for stability
         with:
           scandir: './scripts'
           severity: warning
