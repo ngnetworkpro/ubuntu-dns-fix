@@ -44,5 +44,5 @@ jobs:
         working-directory: scripts
         run: |
           chmod +x ubuntu-dns-fix.sh
-          ./ubuntu-dns-fix.sh
+          ./ubuntu-dns-fix.sh true ${{ env.ACTION_TARGET_DOMAIN }} ${{ env.ACTION_INTERFACE_NAME }}
         

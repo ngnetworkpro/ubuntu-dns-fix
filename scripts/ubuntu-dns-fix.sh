@@ -3,14 +3,21 @@
 LOG_FILE="/var/log/ubuntu-dns-fix.log"
 DEFAULT_TARGET_DOMAIN="google.com" # A reliable domain to test resolution
 DEFAULT_INTERFACE_NAME="eth0"      # Your specific network interface
+DEFAULT_DEBUG=false
 
 # Assign arguments or use default values
-TARGET_DOMAIN="${1:-$DEFAULT_TARGET_DOMAIN}"
-INTERFACE_NAME="${2:-$DEFAULT_INTERFACE_NAME}"  
+DEBUG="${1:-$DEFAULT_DEBUG}"
+TARGET_DOMAIN="${2:-$DEFAULT_TARGET_DOMAIN}"
+INTERFACE_NAME="${3:-$DEFAULT_INTERFACE_NAME}"  
+
 
 # Function to log messages
 log_message() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S'): $1" | sudo tee -a "$LOG_FILE" > /dev/null
+    if $DEBUG; then
+        echo "$(date '+%Y-%m-%d %H:%M:%S'): $1"
+    else
+        echo "$(date '+%Y-%m-%d %H:%M:%S'): $1" | sudo tee -a "$LOG_FILE" > /dev/null
+    fi
 }
 # Function to check DNS resolution using host against systemd-resolved's stub
 check_system_dns() {
