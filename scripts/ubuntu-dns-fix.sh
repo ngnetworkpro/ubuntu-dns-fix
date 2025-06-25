@@ -13,7 +13,7 @@ INTERFACE_NAME="${3:-$DEFAULT_INTERFACE_NAME}"
 
 # Function to log messages
 log_message() {
-    if $DEBUG
+    if $DEBUG; then
         echo "$(date '+%Y-%m-%d %H:%M:%S'): $1"
     else
         echo "$(date '+%Y-%m-%d %H:%M:%S'): $1" | sudo tee -a "$LOG_FILE" > /dev/null
