@@ -39,7 +39,7 @@ jobs:
           set -e
           echo "nameserver 10.0.0.1" | sudo tee /etc/resolv.conf
           echo -e "[Resolve]\nDNS=10.0.0.1" | sudo tee /etc/systemd/resolved.conf.d/test-bad-dns.conf
-          sudo systemctl restart systemd-resolved
+          systemctl restart systemd-resolved
           sleep 2 # Give it a moment to pick up the bad config
           # Verify DNS is indeed broken before running the script
           if host ${{ env.ACTION_TARGET_DOMAIN }} 127.0.0.53; then
@@ -50,7 +50,9 @@ jobs:
           fi
       - name: Run the DNS Health Checker script
         working-directory: scripts
-        run: sudo ./ubuntu-dns-fix.sh
+        run: |
+          chmod +x ubuntu-dns-fix.sh
+          ./ubuntu-dns-fix.sh
 
       - name: Verify DNS is restored after script execution
         run: |
@@ -83,7 +85,9 @@ jobs:
           echo "ACTION_INTERFACE_NAME=${{ github.event.inputs.interface_name || 'eth0' }}" >> $GITHUB_ENV
       - name: Run the DNS Health Checker script
         working-directory: scripts
-        run: sudo ./ubuntu-dns-fix.sh
+        run: |
+          chmod +x ubuntu-dns-fix.sh
+          ./ubuntu-dns-fix.sh
 
       - name: Verify no action was taken (DNS was already healthy)
         run: |
