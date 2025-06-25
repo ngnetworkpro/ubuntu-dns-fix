@@ -1,0 +1,48 @@
+name: Ubuntu DNS Fix Script Test
+
+on:
+  push:
+    branches-ignore:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch: # Allows manual triggering from the GitHub Actions tab
+    inputs:
+      target_domain:
+        description: 'Domain to use for DNS health checks (e.g., example.com)'
+        required: false
+        default: 'google.com'
+      interface_name:
+        description: 'Network interface to check DNS configuration for (e.g., eth0, eno1)'
+        required: false
+        default: 'eth0' # Common default for GitHub Actions runners
+
+jobs:
+  test-dns-healthy:
+    runs-on: ubuntu-latest
+    name: Test Healthy DNS 
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Run ShellCheck on all shell scripts
+        uses: ludeeus/action-shellcheck@master # Using a specific major version for stability
+        with:
+          scandir: './scripts'
+          severity: warning
+
+      - name: Install dependencies (bind9-dnsutils for 'host')
+        run: sudo apt-get update && sudo apt-get install -y bind9-dnsutils
+
+      - name: Set script variables from inputs
+        run: |
+          echo "ACTION_TARGET_DOMAIN=${{ github.event.inputs.target_domain || 'google.com' }}" >> $GITHUB_ENV
+          echo "ACTION_INTERFACE_NAME=${{ github.event.inputs.interface_name || 'eth0' }}" >> $GITHUB_ENV
+      - name: Run the DNS Health Checker script
+        working-directory: scripts
+        run: |
+          chmod +x ubuntu-dns-fix.sh
+          ./ubuntu-dns-fix.sh
+        
