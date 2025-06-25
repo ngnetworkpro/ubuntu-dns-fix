@@ -28,9 +28,9 @@ jobs:
         uses: actions/checkout@v4
         
       - name: Run ShellCheck on all shell scripts
-        uses: bewuethr/shellcheck-action@v2 # Using a specific major version for stability
+        uses: ludeeus/action-shellcheck@v2 # Using a specific major version for stability
         with:
-          files: '**.sh' 
+          scandir: './scripts'
           severity: warning
 
       - name: Install dependencies (bind9-dnsutils for 'host')
